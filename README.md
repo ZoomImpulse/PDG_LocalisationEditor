@@ -126,26 +126,43 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 ### Modal Layout
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  Language: [German ▼]                                            │
-│  [Description] [Name] [Adjective]                                  │
-├──────────────────────┬───────────────────────────────────────────┤
-│  TRANSLATION KEY     │  TRANSLATION                              │
-│  building_army_01    │  ┌─────────────────────────────────────┐    │
-│                      │  │                                     │    │
-│  ENGLISH SOURCE      │  │   Large translation textarea        │    │
-│  Army Headquarters   │  │                                     │    │
-│                      │  └─────────────────────────────────────┘    │
-│                      │                                             │
-│                      │  Status: [TRANSLATED] ●                     │
-│                      │  [Untranslated] [Translated]...             │
-│                      │                                             │
-│                      │  [← Prev] [↓ Next] [Save]                   │
-└──────────────────────┴───────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PDG Localisation  [Translator ▾]                        [👤 Admin]  [? Help] │  ← Header
+├─────────────────────────────────────────────────────────────────────────────┤
+│  👁 Read-only banner (hidden unless role = NONE)                             │  ← Banner
+├──────────────────────────────────────────────────────┬──────────────────────┤
+│  Sheet: [Sheet1 ▼]   Language: [German ▼]            │                      │
+│  Search: [__________________] [Search] [Aa] [Clear]  │   Search Results     │
+│  Show: [Untranslated] [All] [Translated] [Reviewed]  │   (collapsible       │
+│  Fields: [Description] [Name] [Adjective]            │    right panel)      │
+│                                                      │                      │
+│  KEY                                                 │  ── or ──            │
+│  building_army_01                                    │                      │
+│                                                      │   Admin Panel        │
+│  ENGLISH SOURCE                                      │   (collapsible       │
+│  Army Headquarters                                   │    right panel)      │
+│                                                      │                      │
+│  TRANSLATION                                         │                      │
+│  ┌──────────────────────────────────────────────┐   │                      │
+│  │                                              │   │                      │
+│  │   Large translation textarea                 │   │                      │
+│  │                                              │   │                      │
+│  └──────────────────────────────────────────────┘   │                      │
+│                                                      │                      │
+│  STATUS: [TRANSLATED ▾]                              │                      │
+│  [Untranslated] [Translated Ctrl+S] [Reviewed Ctrl+E] [Disputed Ctrl+D]     │
+├──────────────────────────────────────────────────────┴──────────────────────┤
+│  [← Prev]  [↓ Next untranslated]  [Next →]       42 / 150    [Save]         │  ← Footer
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Left panel**: Translation key and corresponding English source for the selected field
-- **Right panel**: Language selector, column tabs, large translation input, status controls
+- **Header**: Title, role badge, admin panel toggle, help tour button
+- **Read-only banner**: Shown when the user has no translator role
+- **Controls**: Sheet selector, language selector, cross-sheet search, status filter buttons, column field tabs
+- **Translation panel**: Current key, English source, large translation textarea, status buttons with keyboard shortcuts
+- **Search results panel**: Slides in from the right when a search is active
+- **Admin panel**: Slides in from the right (admins only) — manage user roles
+- **Footer**: Prev/Next navigation, entry counter, Save button
 
 ## Status Colors
 
