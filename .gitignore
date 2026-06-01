@@ -1,0 +1,9 @@
+# clasp credentials — never commit
+.clasprc.json
+
+# clasp project config contains the Script ID — commit this if you want,
+# but exclude if the repo is public
+# .clasp.json
+
+# Node
+node_modules/

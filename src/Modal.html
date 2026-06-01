@@ -1,0 +1,2961 @@
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <base target="_top">
+    <style>
+      /* ── Reset & base ────────────────────────────────────────────────────── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: 'Google Sans', Arial, sans-serif;
+        font-size: 14px;
+        color: #202124;
+        background: #f8f9fa;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* ── Modal container ─────────────────────────────────────────────────── */
+      #modal {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      }
+
+      /* ── Main content (three columns) ─────────────────────────────────────── */
+      #content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ── Middle column: Translation ────────────────────────────────────────── */
+      #translation-panel {
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+        min-width: 400px;
+      }
+
+      /* ── Right column: Search Results ──────────────────────────────────────── */
+      #search-results-panel {
+        width: 260px;
+        background: #fff;
+        border-left: 1px solid #e0e0e0;
+        display: none;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      #search-results-panel.visible {
+        display: flex;
+      }
+
+      .search-results-header {
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #5f6368;
+        letter-spacing: 0.5px;
+      }
+
+      .search-results-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
+
+      .search-result-item {
+        padding: 10px 16px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: all 0.15s;
+      }
+
+      .search-result-item:hover {
+        background: #f8f9fa;
+        border-left-color: #1a73e8;
+      }
+
+      .search-result-item.active {
+        background: #e8f0fe;
+        border-left-color: #1a73e8;
+      }
+
+      .search-result-key {
+        font-size: 12px;
+        font-weight: 600;
+        color: #202124;
+        font-family: 'Roboto Mono', monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .search-result-preview {
+        font-size: 12px;
+        color: #5f6368;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .search-result-preview mark {
+        background: #ffeb3b;
+        padding: 0 2px;
+        border-radius: 2px;
+      }
+
+      /* ── Controls row ─────────────────────────────────────────────────────── */
+      .controls-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .control-label {
+        font-size: 12px;
+        color: #5f6368;
+        white-space: nowrap;
+      }
+
+      select {
+        padding: 6px 10px;
+        font-size: 13px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        color: #202124;
+        min-width: 140px;
+      }
+
+      /* ── Column tabs ──────────────────────────────────────────────────────── */
+      .tab-wrap {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .col-tab {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+
+      .col-tab:hover {
+        border-color: #1a73e8;
+        background: #f8f9fa;
+      }
+
+      .col-tab.active {
+        background: #1a73e8;
+        border-color: #1a73e8;
+        color: #fff;
+      }
+
+      .col-tab.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #f1f3f4;
+      }
+
+      .col-tab.disabled:hover {
+        border-color: #dadce0;
+        background: #f1f3f4;
+      }
+
+      .col-tab.no-entries {
+        opacity: 0.35;
+        font-style: italic;
+        cursor: not-allowed;
+      }
+
+      .col-tab.no-entries:hover {
+        border-color: #dadce0;
+        background: #fff;
+      }
+
+      /* ── Filter buttons ──────────────────────────────────────────────────────── */
+      .filter-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .filter-btn:hover {
+        border-color: #1a73e8;
+        background: #f8f9fa;
+      }
+
+      .filter-btn.active {
+        background: #1a73e8;
+        border-color: #1a73e8;
+        color: #fff;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .status-dot.untranslated { background: #e06666; }
+      .status-dot.translated { background: #ffff00; }
+      .status-dot.reviewed { background: #00ff00; }
+      .status-dot.disputed { background: #ff0000; }
+      .status-dot.static { background: #d9d9d9; }
+      .status-dot.empty { background: #ccc; }
+
+      /* ── Key + English source (in translation panel) ────────────────────── */
+      #panel-key-value {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 12px;
+        color: #5f6368;
+        background: #f1f3f4;
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        word-break: break-all;
+      }
+
+      .english-source-section {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      #panel-english-value {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #202124;
+        word-break: break-word;
+      }
+
+      /* ── Translation area ───────────────────────────────────────────────── */
+      .translation-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .translation-input-wrap {
+        flex: 1;
+        position: relative;
+        display: flex;
+      }
+
+      #translation-highlight {
+        position: absolute;
+        inset: 0;
+        padding: 16px;
+        font-size: 16px;
+        line-height: 1.6;
+        font-family: 'Google Sans', Arial, sans-serif;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-y: auto;
+        color: transparent;
+        pointer-events: none;
+        box-sizing: border-box;
+      }
+
+      #translation-highlight mark {
+        background: #ffeb3b;
+        color: transparent;
+        border-radius: 2px;
+      }
+
+      .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #5f6368;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      #translation-input {
+        flex: 1;
+        padding: 16px;
+        font-size: 16px;
+        line-height: 1.6;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        resize: none;
+        font-family: 'Google Sans', Arial, sans-serif;
+        position: relative;
+        background: transparent;
+      }
+
+      #translation-input:focus {
+        outline: none;
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+      }
+
+      #translation-input:disabled {
+        background: #f1f3f4;
+        color: #5f6368;
+      }
+
+      /* ── Status section ────────────────────────────────────────────────────── */
+      .status-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      #status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 12px;
+        border: 1px solid;
+      }
+
+      #status-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .status-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .status-btn:hover {
+        border-color: #1a73e8;
+        background: #f8f9fa;
+      }
+
+      .status-btn.active {
+        background: #1a73e8;
+        border-color: #1a73e8;
+        color: #fff;
+      }
+
+      .shortcut-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        margin-left: 5px;
+        opacity: 0.5;
+      }
+
+      .shortcut-hint kbd {
+        font-family: monospace;
+        font-size: 10px;
+        padding: 1px 4px;
+        border: 1px solid currentColor;
+        border-radius: 3px;
+        line-height: 1.4;
+      }
+
+      .status-btn.active .shortcut-hint {
+        opacity: 0.75;
+      }
+
+      /* ── Footer / Navigation ───────────────────────────────────────────────── */
+      #footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-top: 1px solid #e0e0e0;
+        background: #f8f9fa;
+        flex-shrink: 0;
+      }
+
+      .nav-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn:hover:not(:disabled) {
+        background: #f8f9fa;
+        border-color: #1a73e8;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        background: #1a73e8;
+        border-color: #1a73e8;
+        color: #fff;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: #1557b0;
+        border-color: #1557b0;
+      }
+
+      .btn-secondary {
+        background: #fff;
+        color: #5f6368;
+      }
+
+      .entry-counter {
+        font-size: 13px;
+        color: #5f6368;
+      }
+
+      /* ── Role badge ────────────────────────────────────────────────────────── */
+      #role-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      #role-badge.role-admin      { background: #fce8e6; color: #c5221f; }
+      #role-badge.role-reviewer   { background: #e6f4ea; color: #137333; }
+      #role-badge.role-translator { background: #e8f0fe; color: #1a73e8; }
+      #role-badge.role-none       { background: #f1f3f4; color: #5f6368; }
+
+      /* ── Read-only banner ───────────────────────────────────────────────────── */
+      #readonly-banner {
+        display: none;
+        background: #fef7e0;
+        border-bottom: 1px solid #f9ab00;
+        padding: 8px 20px;
+        font-size: 13px;
+        color: #7a5700;
+        flex-shrink: 0;
+      }
+      #readonly-banner.visible { display: block; }
+
+      /* ── Admin panel ────────────────────────────────────────────────────────── */
+      #admin-panel {
+        width: 320px;
+        background: #fff;
+        border-left: 1px solid #e0e0e0;
+        display: none;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+      #admin-panel.visible { display: flex; }
+
+      .admin-panel-header {
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #5f6368;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .admin-panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .admin-add-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .admin-add-row input, .admin-add-row select {
+        width: 100%;
+        padding: 7px 10px;
+        font-size: 13px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+      }
+
+      .admin-add-row button {
+        padding: 8px;
+        font-size: 13px;
+        border: none;
+        border-radius: 4px;
+        background: #1a73e8;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .admin-add-row button:hover { background: #1557b0; }
+
+      .admin-users-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .admin-user-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        font-size: 13px;
+      }
+
+      .admin-user-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+      .admin-user-email { font-size: 12px; color: #202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .admin-user-role  { font-size: 11px; color: #5f6368; font-weight: 600; text-transform: uppercase; }
+
+      .admin-user-remove {
+        padding: 4px 8px;
+        font-size: 12px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        color: #c5221f;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .admin-user-remove:hover { background: #fce8e6; border-color: #c5221f; }
+
+      #btn-admin {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid #dadce0;
+        background: #fff;
+        color: #5f6368;
+        font-size: 14px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+      #btn-admin.visible { display: flex; }
+      #btn-admin:hover, #btn-admin.active {
+        background: #fce8e6;
+        border-color: #c5221f;
+        color: #c5221f;
+      }
+
+      /* ── Header bar ────────────────────────────────────────────────────────── */
+      #modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        background: #fff;
+        border-bottom: 1px solid #e0e0e0;
+        flex-shrink: 0;
+      }
+
+      #modal-header-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #5f6368;
+        letter-spacing: 0.3px;
+      }
+
+      #btn-help {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid #dadce0;
+        background: #fff;
+        color: #5f6368;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        line-height: 1;
+      }
+
+      #btn-help:hover {
+        background: #e8f0fe;
+        border-color: #1a73e8;
+        color: #1a73e8;
+      }
+
+      /* ── Tour overlay ───────────────────────────────────────────────────────── */
+      #tour-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        pointer-events: all;
+      }
+
+      #tour-overlay.active {
+        display: block;
+      }
+
+      #tour-cutout {
+        position: absolute;
+        border-radius: 6px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+        pointer-events: none;
+        transition: all 0.25s ease;
+      }
+
+      /* ── Tour tooltip ───────────────────────────────────────────────────────── */
+      #tour-tooltip {
+        position: absolute;
+        width: 300px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        padding: 18px 20px 14px;
+        z-index: 9001;
+        transition: all 0.25s ease;
+      }
+
+      #tour-tooltip::before {
+        content: '';
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        transform: rotate(45deg);
+      }
+
+      #tour-tooltip.arrow-top::before    { top: -6px;  left: 24px; box-shadow: -2px -2px 5px rgba(0,0,0,0.08); }
+      #tour-tooltip.arrow-bottom::before { bottom: -6px; left: 24px; box-shadow: 2px 2px 5px rgba(0,0,0,0.08); }
+      #tour-tooltip.arrow-left::before   { left: -6px; top: 24px;  box-shadow: -2px 2px 5px rgba(0,0,0,0.08); }
+      #tour-tooltip.arrow-right::before  { right: -6px; top: 24px; box-shadow: 2px -2px 5px rgba(0,0,0,0.08); }
+
+      #tour-step-counter {
+        font-size: 11px;
+        font-weight: 600;
+        color: #1a73e8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      #tour-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #202124;
+        margin-bottom: 6px;
+      }
+
+      #tour-text {
+        font-size: 13px;
+        color: #5f6368;
+        line-height: 1.55;
+        margin-bottom: 14px;
+      }
+
+      .tour-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #tour-skip {
+        font-size: 12px;
+        color: #9aa0a6;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        text-decoration: underline;
+      }
+
+      #tour-skip:hover { color: #5f6368; }
+
+      .tour-nav {
+        display: flex;
+        gap: 8px;
+      }
+
+      #tour-prev {
+        padding: 7px 14px;
+        font-size: 13px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background: #fff;
+        color: #5f6368;
+        cursor: pointer;
+      }
+
+      #tour-prev:hover { background: #f8f9fa; }
+      #tour-prev:disabled { opacity: 0.4; cursor: default; }
+
+      #tour-next {
+        padding: 7px 16px;
+        font-size: 13px;
+        border: none;
+        border-radius: 4px;
+        background: #1a73e8;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      #tour-next:hover { background: #1557b0; }
+
+      /* ── Loading state ─────────────────────────────────────────────────────── */
+      #loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 16px;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+
+      #sheet-picker-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #202124;
+        margin-bottom: 4px;
+        text-align: center;
+      }
+
+      #sheet-picker {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+        max-width: 640px;
+      }
+
+      #sheet-picker-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        width: 100%;
+        max-width: 600px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        padding: 4px;
+        box-sizing: border-box;
+        margin: 0 auto;
+      }
+
+      .sheet-picker-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.15s;
+        min-height: 70px;
+        height: auto;
+        outline: none;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      }
+
+      .sheet-picker-btn:hover {
+        border-color: #1a73e8;
+        background: #f8f9fa;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .sheet-picker-btn:focus {
+        outline: none;
+        border-color: #1a73e8;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e0e0e0;
+        border-top-color: #1a73e8;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .search-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e0e0e0;
+        border-top-color: #1a73e8;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes ellipsis {
+        0%   { content: '.'; }
+        33%  { content: '..'; }
+        66%  { content: '...'; }
+        100% { content: '.'; }
+      }
+
+      .searching-label::after {
+        content: '.';
+        animation: ellipsis 1.2s steps(1) infinite;
+      }
+
+      /* ── Empty state ───────────────────────────────────────────────────────── */
+      #empty-state {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 16px;
+        text-align: center;
+        color: #5f6368;
+      }
+
+      #empty-state.visible {
+        display: flex;
+      }
+
+      .empty-icon {
+        font-size: 48px;
+      }
+
+      .empty-title {
+        font-size: 20px;
+        font-weight: 500;
+        color: #202124;
+      }
+    </style>
+  </head>
+  <body tabindex="-1">
+
+  <!-- Loading screen / Sheet picker -->
+  <div id="loading">
+    <div class="spinner" id="loading-spinner"></div>
+    <span id="loading-text">Loading…</span>
+    <div id="sheet-picker">
+      <div id="sheet-picker-title">Choose a sheet to work on</div>
+      <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <select id="lang-filter" style="padding:4px 8px;border-radius:4px;border:1px solid #dadce0;font-size:12px;cursor:pointer;">
+          <option value="">All languages</option>
+          <option value="English">English</option>
+          <option value="German">German</option>
+          <option value="French">French</option>
+          <option value="Russian">Russian</option>
+          <option value="Polish">Polish</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Italian">Italian</option>
+          <option value="Braz_Por">Braz_Por</option>
+        </select>
+      </div>
+      <div id="cache-status" style="font-size:11px;color:#5f6368;text-align:center;margin-bottom:8px;">
+        Loading progress…
+      </div>
+      <div id="sheet-picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- Tour overlay (outside modal so it overlays everything) -->
+  <div id="tour-overlay">
+    <div id="tour-cutout"></div>
+    <div id="tour-tooltip">
+      <div id="tour-step-counter">Step 1 / 7</div>
+      <div id="tour-title"></div>
+      <div id="tour-text"></div>
+      <div class="tour-controls">
+        <button id="tour-skip" onclick="endTour()">Skip tour</button>
+        <div class="tour-nav">
+          <button id="tour-prev" onclick="tourPrev()">Back</button>
+          <button id="tour-next" onclick="tourNext()">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main modal -->
+  <div id="modal" style="display:none">
+
+    <!-- Header -->
+    <div id="modal-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="modal-header-title">PDG Localisation</span>
+        <span id="role-badge" class="role-none">—</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="btn-admin" onclick="toggleAdminPanel()" title="Manage roles">👤</button>
+        <button id="btn-help" onclick="startTour()" title="Help tour">?</button>
+      </div>
+    </div>
+
+    <!-- Read-only banner -->
+    <div id="readonly-banner">👁 Read-only mode — you don't have a translator role. Contact an Admin to request access.</div>
+
+    <!-- Content (three columns) -->
+    <div id="content">
+
+      <!-- Middle: Translation -->
+      <div id="translation-panel">
+
+        <!-- Controls -->
+        <div id="sheet-lang-row" class="controls-row">
+          <div class="control-group">
+            <span class="control-label">Sheet:</span>
+            <select id="sheet-select"></select>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Language:</span>
+            <select id="lang-select"></select>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="controls-row" id="search-row">
+          <div class="control-group" style="flex:1">
+            <span class="control-label">Search:</span>
+            <input type="text" id="search-input" placeholder="Search keys or translations across all sheets…" style="flex:1;min-width:200px;padding:6px 10px;font-size:13px;border:1px solid #dadce0;border-radius:4px;">
+            <button class="btn btn-primary" id="btn-search" onclick="triggerSearch()" style="padding:6px 16px;font-size:13px;">Search</button>
+            <button class="btn btn-secondary" id="btn-case" onclick="toggleCaseSensitive()" title="Toggle case sensitivity" style="padding:6px 10px;font-size:13px;font-family:monospace;letter-spacing:-0.5px;">Aa</button>
+            <button class="btn btn-secondary" id="btn-clear-search" onclick="clearSearch()" style="padding:6px 12px;font-size:13px;">Clear</button>
+          </div>
+        </div>
+
+        <!-- Status filter -->
+        <div class="controls-row">
+          <div class="control-group" style="flex:1">
+            <span class="control-label">Show:</span>
+            <div id="status-filter" class="tab-wrap">
+              <button class="filter-btn active" data-filter="untranslated" onclick="setStatusFilter('untranslated')">Untranslated</button>
+              <button class="filter-btn" data-filter="all" onclick="setStatusFilter('all')">All</button>
+              <button class="filter-btn" data-filter="translated" onclick="setStatusFilter('translated')">Translated</button>
+              <button class="filter-btn" data-filter="reviewed" onclick="setStatusFilter('reviewed')">Reviewed</button>
+              <button class="filter-btn" data-filter="disputed" onclick="setStatusFilter('disputed')">Disputed</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column tabs -->
+        <div id="col-tabs-row" class="controls-row" style="display:none">
+          <div class="control-group">
+            <span class="control-label">Fields:</span>
+            <div id="col-tabs" class="tab-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Loc key (always visible) -->
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div class="section-label">Key</div>
+          <div id="panel-key-value">—</div>
+        </div>
+
+        <!-- English source -->
+        <div id="english-source-section" class="english-source-section">
+          <div class="section-label" style="margin-bottom:2px;">English Source</div>
+          <div id="panel-english-value">—</div>
+        </div>
+
+        <!-- Translation input -->
+        <div class="translation-section">
+          <div class="section-label">Translation</div>
+          <div class="translation-input-wrap">
+            <div id="translation-highlight"></div>
+            <textarea id="translation-input" placeholder="Enter your translation here…"></textarea>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status-section" id="status-section">
+          <div class="section-label">
+            Status: <span id="status-badge">—</span>
+          </div>
+          <div id="status-buttons">
+            <button class="status-btn" data-status="UNTRANSLATED" onclick="selectStatus('UNTRANSLATED')">Untranslated</button>
+            <button class="status-btn" data-status="TRANSLATED" onclick="selectStatus('TRANSLATED')" title="Mark Translated &amp; Save (Ctrl+S)">Translated <span class="shortcut-hint"><kbd>Ctrl</kbd><kbd>S</kbd></span></button>
+            <button class="status-btn" data-status="REVIEWED" onclick="selectStatus('REVIEWED')" title="Mark Reviewed &amp; Save (Ctrl+E)">Reviewed <span class="shortcut-hint"><kbd>Ctrl</kbd><kbd>E</kbd></span></button>
+            <button class="status-btn" data-status="DISPUTED" onclick="selectStatus('DISPUTED')" title="Mark Disputed &amp; Save (Ctrl+D)">Disputed <span class="shortcut-hint"><kbd>Ctrl</kbd><kbd>D</kbd></span></button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: Search Results -->
+      <div id="search-results-panel">
+        <div class="search-results-header">Search Results</div>
+        <div id="search-results-list" class="search-results-list"></div>
+      </div>
+
+      <!-- Admin panel -->
+      <div id="admin-panel">
+        <div class="admin-panel-header">
+          <span>Manage Roles</span>
+          <button onclick="toggleAdminPanel()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#5f6368;">✕</button>
+        </div>
+        <div class="admin-panel-body">
+          <div class="admin-add-row">
+            <div style="font-size:12px;font-weight:600;color:#5f6368;text-transform:uppercase;letter-spacing:0.4px;">Add / Update User</div>
+            <input type="email" id="admin-email-input" placeholder="user@example.com">
+            <select id="admin-role-select">
+              <option value="TRANSLATOR">Translator</option>
+              <option value="REVIEWER">Reviewer</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+            <button onclick="adminAddUser()">Add / Update</button>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#5f6368;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">Current Users</div>
+            <div id="admin-users-list" class="admin-users-list">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer">
+      <div class="nav-group">
+        <button class="btn btn-secondary" id="btn-prev" onclick="navigate(-1)" title="Previous (Ctrl+←)">← Back <span class="shortcut-hint"><kbd>Ctrl</kbd><kbd>←</kbd></span></button>
+        <button class="btn btn-secondary" id="btn-next" onclick="navigate(1)" title="Next (Ctrl+→)">Next → <span class="shortcut-hint"><kbd>Ctrl</kbd><kbd>→</kbd></span></button>
+      </div>
+      <span class="entry-counter" id="entry-counter">—</span>
+      <div class="nav-group">
+        <button class="btn btn-primary" id="btn-save" onclick="saveEntry()" title="Save (Ctrl+S)">Save</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state">
+    <div class="empty-icon" id="empty-icon">✅</div>
+    <div class="empty-title" id="empty-title">All done!</div>
+    <div id="empty-message">No entries found for this filter.</div>
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn" onclick="setStatusFilter('translated')">Show Translated</button>
+      <button class="btn" onclick="setStatusFilter('reviewed')">Show Reviewed</button>
+      <button class="btn btn-primary" onclick="showAllEntries()">Show All</button>
+    </div>
+  </div>
+
+  <script>
+  // ── Role (injected server-side) ───────────────────────────────────────────────
+  var USER_ROLE = '<?= userRole ?>';
+  var USER_LAST_LANG = '<?= userLastLang ?>';
+
+  // ── State ─────────────────────────────────────────────────────────────────────
+  var state = {
+    // Current sheet data
+    sheetData: null,
+    languages: [],
+    selectedLang: null,
+    selectedColIndex: null,
+    selectedTabIndex: 0,
+    currentColumns: [],
+    // Filters
+    filter: 'untranslated',      // 'untranslated', 'all', 'translated', 'reviewed', 'disputed'
+    statusFilter: 'untranslated', // For explicit status filter buttons
+    // Navigation
+    filteredRows: [],
+    currentIdx: 0,
+    pendingStatus: null,
+    isDirty: false,
+    // Sheet info
+    sheetName: null,
+    totalRows: 0,
+    // Sheet cache (LRU cache for last 5 sheets)
+    sheetCache: {},
+    cachedSheetNames: [],
+    // Search state
+    searchQuery: '',
+    isGlobalSearch: false,
+    globalSearchResults: [],
+    caseSensitive: false,
+  };
+
+  // ── Status helpers ────────────────────────────────────────────────────────────
+  var STATUS_COLOR = {
+    STATIC:       '#d9d9d9',
+    UNTRANSLATED: '#e06666',
+    TRANSLATED:   '#ffff00',
+    REVIEWED:     '#00ff00',
+    DISPUTED:     '#ff0000',
+  };
+
+  var STATUS_LABEL = {
+    STATIC:       'Static',
+    UNTRANSLATED: 'Untranslated',
+    TRANSLATED:   'Translated',
+    REVIEWED:     'Reviewed',
+    DISPUTED:     'Disputed',
+  };
+
+  function statusColor(s) { return STATUS_COLOR[s] || STATUS_COLOR.UNTRANSLATED; }
+  function statusLabel(s) { return STATUS_LABEL[s] || 'Untranslated'; }
+  function isUntranslated(status) { return !status || status === 'UNTRANSLATED'; }
+
+  // ── Init ───────────────────────────────────────────────────────────────────────
+  window.addEventListener('load', function() {
+    document.body.focus();
+    applyRole();
+    loadSheetNames();
+  });
+
+  function loadSheetNames() {
+    google.script.run
+      .withSuccessHandler(function(names) {
+        var sel = document.getElementById('sheet-select');
+        sel.innerHTML = '';
+        names.forEach(function(name) {
+          var opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        });
+        if (names.length === 0) {
+          showLoading(false);
+          showToast('No localisation sheets found.');
+        } else {
+          // Show picker immediately without progress data
+          showSheetPicker(names, null);
+          // Then load cached progress in background and update
+          loadCachedProgressForPicker(names);
+        }
+      })
+      .withFailureHandler(handleError)
+      .getSheetNames();
+  }
+
+  // Store progress data globally for sheet picker
+  var sheetProgressData = null;
+  var availableLanguages = [];
+  var currentLangFilter = '';
+
+  function showSheetPicker(names, progressData) {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('loading-text').style.display = 'none';
+
+    var grid = document.getElementById('sheet-picker-grid');
+    grid.innerHTML = '';
+
+    // Build progress lookup map if available
+    var progressMap = {};
+    if (progressData) {
+      progressData.forEach(function(sheet) {
+        progressMap[sheet.sheetName] = sheet.languages;
+      });
+    }
+    names.forEach(function(name) {
+      var btn = document.createElement('button');
+      btn.className = 'sheet-picker-btn';
+
+      // Build button content
+      var content = document.createElement('div');
+      content.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;gap:4px;';
+
+      var title = document.createElement('span');
+      title.textContent = name;
+      title.style.cssText = 'font-weight:500;';
+      content.appendChild(title);
+
+      // Add progress info for all languages
+      var languages = progressMap[name];
+      if (languages && languages.length > 0) {
+        // Filter by selected language if set
+        if (currentLangFilter) {
+          languages = languages.filter(function(l) { return l.languageName === currentLangFilter; });
+        }
+        if (languages.length === 0) {
+          // No languages match filter - skip this sheet
+          return;
+        }
+        var progressContainer = document.createElement('div');
+        progressContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;font-size:9px;margin-top:6px;line-height:1.4;';
+
+        // Sort by fixed language order: English, German, French, Russian, Polish, Spanish, Italian, Braz_Por
+        var langOrder = ['English', 'German', 'French', 'Russian', 'Polish', 'Spanish', 'Italian', 'Braz_Por'];
+        languages.sort(function(a, b) {
+          var idxA = langOrder.indexOf(a.languageName);
+          var idxB = langOrder.indexOf(b.languageName);
+          if (idxA === -1) idxA = 999;
+          if (idxB === -1) idxB = 999;
+          return idxA - idxB;
+        });
+
+        languages.forEach(function(lang) {
+          if (lang.total === 0) return;
+          var pct = Math.round((lang.reviewed / lang.total) * 100);
+          var langBadge = document.createElement('span');
+
+          // Color coding with softer colors
+          var bgColor, textColor, borderColor;
+          if (pct === 100) {
+            bgColor = '#d4edda';
+            textColor = '#155724';
+            borderColor = '#c3e6cb';
+          } else if (pct >= 50) {
+            bgColor = '#d1ecf1';
+            textColor = '#0c5460';
+            borderColor = '#bee5eb';
+          } else {
+            bgColor = '#f8d7da';
+            textColor = '#721c24';
+            borderColor = '#f5c6cb';
+          }
+
+          langBadge.style.cssText = 'padding:2px 5px;border-radius:4px;background:' + bgColor + ';color:' + textColor + ';border:1px solid ' + borderColor + ';white-space:nowrap;font-weight:500;';
+          langBadge.textContent = lang.languageName + ': ' + pct + '%';
+          langBadge.title = lang.reviewed + '/' + lang.total + ' reviewed';
+          progressContainer.appendChild(langBadge);
+        });
+
+        if (progressContainer.children.length > 0) {
+          content.appendChild(progressContainer);
+        }
+      } else {
+        // No progress data yet
+        var noData = document.createElement('span');
+        noData.style.cssText = 'font-size:11px;color:#9aa0a6;font-style:italic;';
+        noData.textContent = 'Progress loading…';
+        content.appendChild(noData);
+      }
+
+      btn.appendChild(content);
+      btn.title = name;
+      btn.addEventListener('click', function() {
+        document.getElementById('sheet-picker').style.display = 'none';
+        document.getElementById('loading-spinner').style.display = '';
+        document.getElementById('loading-text').style.display = '';
+        document.getElementById('loading-text').textContent = 'Loading translations…';
+        document.getElementById('sheet-select').value = name;
+        loadSheetData(name);
+      });
+      grid.appendChild(btn);
+    });
+
+    document.getElementById('sheet-picker').style.display = 'flex';
+  }
+
+  /**
+   * Auto-loads cached progress when picker opens.
+   * Shows progress for ALL languages at once.
+   */
+  function loadCachedProgressForPicker(names) {
+    var statusEl = document.getElementById('cache-status');
+
+    // Get last update time
+    google.script.run
+      .withSuccessHandler(function(lastUpdated) {
+        if (lastUpdated) {
+          var date = new Date(lastUpdated);
+          var timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          statusEl.textContent = 'Progress updated at ' + timeStr;
+        }
+      })
+      .withFailureHandler(function() {
+        // Silently fail
+      })
+      .getCacheLastUpdated();
+
+    // Load cached progress data for all languages
+    google.script.run
+      .withSuccessHandler(function(cachedProgress) {
+        if (!cachedProgress || cachedProgress.length === 0) {
+          statusEl.textContent = 'Progress will appear shortly (first cache build in progress…)';
+          return;
+        }
+
+        // Transform cached flat data into nested format
+        var progressMap = {};
+        cachedProgress.forEach(function(entry) {
+          if (!progressMap[entry.sheetName]) {
+            progressMap[entry.sheetName] = [];
+          }
+          progressMap[entry.sheetName].push({
+            languageName: entry.language,
+            total: entry.total,
+            translated: entry.translated,
+            reviewed: entry.reviewed,
+            disputed: entry.disputed,
+            untranslated: entry.untranslated
+          });
+        });
+
+        // Convert to array format
+        var progressData = Object.keys(progressMap).map(function(sheetName) {
+          return {
+            sheetName: sheetName,
+            languages: progressMap[sheetName]
+          };
+        });
+
+        sheetProgressData = progressData;
+        statusEl.textContent = 'Progress loaded (' + progressData.length + ' sheets)';
+
+        // Re-render picker with progress data
+        showSheetPicker(names, progressData);
+      })
+      .withFailureHandler(function(err) {
+        console.error('getCachedProgress failed:', err);
+        statusEl.textContent = 'Error loading progress: ' + (err.message || 'timeout');
+      })
+      .getCachedProgress();
+  }
+
+  document.getElementById('sheet-select').addEventListener('change', function() {
+    loadSheetData(this.value);
+  });
+
+  // Language filter for sheet picker
+  document.getElementById('lang-filter').addEventListener('change', function() {
+    currentLangFilter = this.value;
+    // Re-render picker with current data
+    var sel = document.getElementById('sheet-select');
+    var names = Array.from(sel.options).map(function(opt) { return opt.value; });
+    showSheetPicker(names, sheetProgressData);
+  });
+
+  // Request tracking to prevent stale data from previous sheet loads
+  var currentRequestId = 0;
+
+  const MAX_CACHED_SHEETS = 5;
+
+  function loadSheetData(sheetName) {
+    showLoading(true);
+
+    // Increment request ID to invalidate any pending requests from previous sheets
+    currentRequestId++;
+    var thisRequestId = currentRequestId;
+
+    // Check cache first
+    if (state.sheetCache[sheetName]) {
+      console.log('Loading sheet from cache:', sheetName);
+      var cached = state.sheetCache[sheetName];
+
+      state.sheetData = cached.sheetData;
+      state.languages = cached.languages;
+      state.totalRows = cached.totalRows;
+      state.sheetName = sheetName;
+
+      // Move to front of cache order (LRU)
+      updateCacheOrder(sheetName);
+
+      // Build UI
+      buildLanguageSelector(state.languages);
+      document.getElementById('modal').style.display = 'flex';
+
+      // Restore last selected language for this sheet, or default
+      var savedLang = cached.lastSelectedLang;
+      var langToSelect = savedLang || state.languages.find(function(l) {
+        return l.languageName.toLowerCase() !== 'english';
+      }) || state.languages[0];
+
+      if (langToSelect) {
+        document.getElementById('lang-select').value = langToSelect.languageName || langToSelect;
+        onLanguageChange(langToSelect.languageName || langToSelect);
+      }
+
+      showLoading(false);
+      applyFilterAndRender();
+      document.getElementById('translation-input').focus();
+      return;
+    }
+
+    // Reset data for new sheet
+    state.sheetData = null;
+    state.filteredRows = [];
+    state.currentIdx = 0;
+
+    // Load full sheet data at once
+    google.script.run
+      .withSuccessHandler(function(data) {
+        // Ignore if user switched to another sheet while we were loading
+        if (thisRequestId !== currentRequestId) return;
+
+        state.sheetData = {
+          sheetName: data.sheetName,
+          languages: data.languages,
+          rows: data.rows
+        };
+        state.languages = data.languages;
+        state.totalRows = data.rows.length;
+        state.sheetName = data.sheetName;
+
+        // Add to cache
+        addSheetToCache(sheetName, {
+          sheetData: state.sheetData,
+          languages: state.languages,
+          totalRows: state.totalRows,
+          lastSelectedLang: null
+        });
+
+        // Build UI
+        buildLanguageSelector(data.languages);
+        document.getElementById('modal').style.display = 'flex';
+
+        // Trigger initial language selection to build column tabs
+        var defaultLang = (USER_LAST_LANG && data.languages.find(function(l) {
+          return l.languageName === USER_LAST_LANG;
+        })) || data.languages.find(function(l) {
+          return l.languageName.toLowerCase() !== 'english';
+        }) || data.languages[0];
+        if (defaultLang) {
+          onLanguageChange(defaultLang.languageName);
+        }
+
+        showLoading(false);
+        applyFilterAndRender();
+        document.getElementById('translation-input').focus();
+
+        // Trigger pending navigation if any
+        onSheetLoadComplete();
+      })
+      .withFailureHandler(handleError)
+      .getFullSheetData(sheetName);
+  }
+
+  function updateCacheOrder(sheetName) {
+    // Remove from current position
+    var idx = state.cachedSheetNames.indexOf(sheetName);
+    if (idx > -1) {
+      state.cachedSheetNames.splice(idx, 1);
+    }
+    // Add to front (most recently used)
+    state.cachedSheetNames.unshift(sheetName);
+  }
+
+  function addSheetToCache(sheetName, data) {
+    // Evict oldest if at capacity
+    while (state.cachedSheetNames.length >= MAX_CACHED_SHEETS) {
+      var oldest = state.cachedSheetNames.pop();
+      delete state.sheetCache[oldest];
+      console.log('Evicted from cache:', oldest);
+    }
+
+    // Add new sheet
+    state.sheetCache[sheetName] = data;
+    state.cachedSheetNames.unshift(sheetName);
+    console.log('Added to cache:', sheetName, 'Cache size:', state.cachedSheetNames.length);
+  }
+
+  function updateCacheLanguage(sheetName, lang) {
+    if (state.sheetCache[sheetName]) {
+      state.sheetCache[sheetName].lastSelectedLang = lang;
+    }
+  }
+
+  /**
+   * @deprecated - Full sheet loading is now used instead of pagination
+   * Kept for reference if needed for very large sheets in future
+   */
+  function loadMoreRows(startRow, batchSize, isInitial, requestId) {
+    console.warn('loadMoreRows is deprecated, use full sheet loading instead');
+  }
+
+  function showLoading(on) {
+    document.getElementById('loading').style.display = on ? 'flex' : 'none';
+  }
+
+  function handleError(err) {
+    showLoading(false);
+    alert('Error: ' + err.message);
+  }
+
+  // ── Language selector ─────────────────────────────────────────────────────────
+  function buildLanguageSelector(languages) {
+    var sel = document.getElementById('lang-select');
+    sel.innerHTML = '';
+    languages.forEach(function(lang) {
+      var opt = document.createElement('option');
+      opt.value = lang.languageName;
+      opt.textContent = lang.languageName;
+      sel.appendChild(opt);
+    });
+
+    // Default: pick first non-English language
+    var defaultLang = languages.find(function(l) {
+      return l.languageName.toLowerCase() !== 'english';
+    }) || languages[0];
+
+    if (defaultLang) {
+      sel.value = defaultLang.languageName;
+      // Don't call onLanguageChange here - it's called after initial row batch loads
+    }
+  }
+
+  document.getElementById('lang-select').addEventListener('change', function() {
+    onLanguageChange(this.value);
+  });
+
+  // Search functionality
+  document.getElementById('search-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      triggerSearch();
+    } else if (e.key === 'Escape') {
+      clearSearch();
+    }
+  });
+
+  function toggleCaseSensitive() {
+    state.caseSensitive = !state.caseSensitive;
+    var btn = document.getElementById('btn-case');
+    btn.classList.toggle('btn-primary', state.caseSensitive);
+    btn.classList.toggle('btn-secondary', !state.caseSensitive);
+    if (state.searchQuery) {
+      performGlobalSearch(state.searchQuery);
+    }
+  }
+
+  function triggerSearch() {
+    var query = document.getElementById('search-input').value.trim();
+    state.currentIdx = 0;
+
+    if (!query) {
+      clearSearch();
+      return;
+    }
+
+    performGlobalSearch(query);
+  }
+
+  function clearSearch() {
+    state.searchQuery = '';
+    state.isGlobalSearch = false;
+    state.globalSearchResults = [];
+    document.getElementById('search-input').value = '';
+    document.getElementById('translation-highlight').innerHTML = '';
+    state.currentIdx = 0;
+    applyFilterAndRender();
+  }
+
+  function performGlobalSearch(query) {
+    state.searchQuery = query;
+    state.isGlobalSearch = true;
+
+    // Show loading indicator in search results panel
+    var panel = document.getElementById('search-results-panel');
+    var list = document.getElementById('search-results-list');
+    var header = panel.querySelector('.search-results-header');
+    panel.classList.add('visible');
+    header.textContent = 'Searching all sheets…';
+    list.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:16px;color:#5f6368;"><div class="search-spinner"></div><span class="searching-label">Searching</span></div>';
+
+    google.script.run
+      .withSuccessHandler(function(results) {
+        if (!state.caseSensitive) {
+          state.globalSearchResults = results;
+        } else {
+          var q = state.searchQuery;
+          state.globalSearchResults = results.filter(function(r) {
+            return r.key.includes(q) || (r.preview && r.preview.includes(q));
+          });
+        }
+        renderGlobalSearchResults();
+      })
+      .withFailureHandler(function(err) {
+        console.error('Global search failed:', err);
+        header.textContent = 'Search failed';
+        list.innerHTML = '<div style="padding:16px;color:#e06666;">Search failed: ' + err.message + '</div>';
+      })
+      .searchAllSheets(query, 100);
+  }
+
+  function renderGlobalSearchResults() {
+    var panel = document.getElementById('search-results-panel');
+    var list = document.getElementById('search-results-list');
+    var header = panel.querySelector('.search-results-header');
+    var results = state.globalSearchResults;
+
+    if (!results || results.length === 0) {
+      header.textContent = 'No results';
+      list.innerHTML = '<div style="padding:16px;color:#5f6368;">No matches found</div>';
+      return;
+    }
+
+    header.textContent = 'Search Results (' + results.length + ')';
+    list.innerHTML = '';
+
+    results.forEach(function(result, idx) {
+      var item = document.createElement('div');
+      item.className = 'search-result-item';
+      if (idx === 0) item.classList.add('active');
+
+      // Sheet + language + field badge
+      var sheetBadge = document.createElement('div');
+      sheetBadge.style.cssText = 'font-size:10px;color:#1a73e8;font-weight:600;margin-bottom:2px;';
+      var langField = '';
+      if (result.language) {
+        langField = result.language;
+        if (result.fieldName && result.fieldName !== 'Text') {
+          langField += ' · ' + result.fieldName;
+        }
+      }
+      sheetBadge.textContent = result.sheetName + (langField ? ' · ' + langField : '');
+      item.appendChild(sheetBadge);
+
+      // Key
+      var keyDiv = document.createElement('div');
+      keyDiv.className = 'search-result-key';
+      keyDiv.textContent = result.key;
+      item.appendChild(keyDiv);
+
+      // Preview
+      var previewDiv = document.createElement('div');
+      previewDiv.className = 'search-result-preview';
+      previewDiv.textContent = result.preview || 'No preview';
+      item.appendChild(previewDiv);
+
+      // Click handler
+      item.addEventListener('click', function() {
+        navigateToGlobalSearchResult(idx);
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  // Pending navigation from global search when sheet is loading
+  var pendingNavigateResult = null;
+
+  function navigateToGlobalSearchResult(resultIndex) {
+    var result = state.globalSearchResults[resultIndex];
+    if (!result) return;
+
+    // If not on the right sheet, switch to it
+    if (state.sheetName !== result.sheetName) {
+      // Save current state
+      if (state.isDirty) {
+        if (!confirm('You have unsaved changes. Discard and navigate to result?')) return;
+      }
+
+      // Store full result to navigate to after sheet loads
+      pendingNavigateResult = result;
+
+      // Switch sheet
+      document.getElementById('sheet-select').value = result.sheetName;
+      loadSheetData(result.sheetName);
+    } else {
+      // Already on correct sheet, navigate with full context
+      navigateToSearchResult(result);
+    }
+  }
+
+  function onSheetLoadComplete() {
+    // Called after sheet data is fully loaded
+    if (pendingNavigateResult) {
+      var result = pendingNavigateResult;
+      pendingNavigateResult = null;
+      // Small delay to ensure UI is rendered
+      setTimeout(function() {
+        navigateToSearchResult(result);
+      }, 50);
+    }
+  }
+
+  function navigateToSearchResult(result) {
+    var key = result.key;
+    var targetLang = result.language;
+    var targetColIndex = result.columnIndex;
+
+    // Switch to the correct language first
+    if (targetLang && state.languages.find(function(l) { return l.languageName === targetLang; })) {
+      // Build language tabs for this language
+      onLanguageChange(targetLang);
+    }
+
+    // Then select the correct column tab
+    if (targetColIndex) {
+      var targetTabIdx = state.currentColumns.findIndex(function(c) { return c.colIndex === targetColIndex; });
+      selectColumn(targetColIndex, targetTabIdx !== -1 ? targetTabIdx : 0);
+    }
+
+    // Now find and navigate to the row
+    navigateToRowByKey(key);
+  }
+
+  function navigateToRowByKey(key) {
+    // Find the row in current sheet data
+    var rowIdx = state.sheetData.rows.findIndex(function(r) { return r.key === key; });
+    if (rowIdx === -1) {
+      console.warn('Row not found for key:', key);
+      return;
+    }
+
+    var row = state.sheetData.rows[rowIdx];
+
+    // Find in filtered rows - if not there, temporarily switch to 'all' filter
+    var filteredIdx = state.filteredRows.findIndex(function(r) { return r.key === key; });
+
+    if (filteredIdx === -1) {
+      // Row is filtered out - temporarily show all to display this row
+      console.log('Row filtered out, temporarily showing all entries for key:', key);
+      setStatusFilter('all');
+      // Re-find after filter change
+      filteredIdx = state.filteredRows.findIndex(function(r) { return r.key === key; });
+    }
+
+    if (filteredIdx !== -1) {
+      state.currentIdx = filteredIdx;
+      renderCurrentEntry();
+      updateSearchResultsActiveItem();
+
+      // Highlight the search result item
+      document.querySelectorAll('.search-result-item').forEach(function(item, idx) {
+        item.classList.toggle('active', state.globalSearchResults[idx] && state.globalSearchResults[idx].key === key);
+      });
+    } else {
+      console.warn('Row still not found after filter change:', key);
+    }
+  }
+
+  function onLanguageChange(langName) {
+    state.selectedLang = langName;
+    google.script.run.saveUserLastLang(langName);
+
+    // Sync the DOM selector
+    var sel = document.getElementById('lang-select');
+    if (sel.value !== langName) sel.value = langName;
+
+    // Save language preference to cache
+    if (state.sheetName) {
+      updateCacheLanguage(state.sheetName, langName);
+    }
+
+    var lang = state.languages.find(function(l) { return l.languageName === langName; });
+    if (!lang) return;
+
+    buildColumnTabs(lang);
+    updateTranslationPanelLabels(langName);
+  }
+
+  function getEnglishColumnForCurrentTab() {
+    var enLang = state.languages.find(function(l) {
+      return l.languageName.toLowerCase() === 'english';
+    });
+    if (!enLang || !enLang.columns.length) return null;
+
+    // Get the short name of the currently selected column
+    var selectedCol = state.currentColumns[state.selectedTabIndex];
+    if (!selectedCol) return enLang.columns[0].colIndex;
+
+    var selectedShortName = selectedCol.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+
+    // Find matching English column by short name
+    var matchingEnCol = enLang.columns.find(function(c) {
+      var enShortName = c.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      return enShortName === selectedShortName;
+    });
+
+    return matchingEnCol ? matchingEnCol.colIndex : enLang.columns[0].colIndex;
+  }
+
+  function isEnglishColumnForTabEmpty(colIndex) {
+    // If colIndex not provided, use current selected column
+    var targetColIndex = colIndex || state.selectedColIndex;
+    if (!targetColIndex || !state.sheetData) return true;
+
+    var enLang = state.languages.find(function(l) {
+      return l.languageName.toLowerCase() === 'english';
+    });
+    if (!enLang || !enLang.columns.length) return true;
+
+    // Find the column header short name
+    var currentLang = state.languages.find(function(l) { return l.languageName === state.selectedLang; });
+    var currentCol = currentLang && currentLang.columns.find(function(c) { return c.colIndex === targetColIndex; });
+    if (!currentCol) return true;
+
+    var shortName = currentCol.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+
+    // Find matching English column
+    var matchingEnCol = enLang.columns.find(function(ec) {
+      var enShortName = ec.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      return enShortName === shortName;
+    });
+
+    if (!matchingEnCol) return true;
+
+    // Check if English column has any values
+    return !state.sheetData.rows.some(function(row) {
+      var enCell = row.cells[String(matchingEnCol.colIndex)];
+      return enCell && enCell.value.trim();
+    });
+  }
+
+  function updateTranslationPanelLabels(langName) {
+    var isEnglish = langName && langName.toLowerCase() === 'english';
+    var isEnColumnEmpty = isEnglishColumnForTabEmpty();
+    document.getElementById('english-source-section').style.display = (isEnglish || isEnColumnEmpty) ? 'none' : '';
+    var translationLabel = document.querySelector('.translation-section .section-label');
+    if (translationLabel) translationLabel.textContent = isEnglish ? 'Source Text' : 'Translation';
+    var input = document.getElementById('translation-input');
+    if (input) input.placeholder = isEnglish ? 'Enter source text here…' : 'Enter your translation here…';
+  }
+
+  // ── Column tabs ───────────────────────────────────────────────────────────────
+  function buildColumnTabs(lang) {
+    var container = document.getElementById('col-tabs');
+    var row = document.getElementById('col-tabs-row');
+    container.innerHTML = '';
+
+    // Filter out columns whose matching English column is completely empty
+    var enLang = state.languages.find(function(l) {
+      return l.languageName.toLowerCase() === 'english';
+    });
+
+    var visibleColumns = lang.columns.filter(function(c) {
+      // If no English language or this is English itself, show all
+      if (!enLang || lang.languageName.toLowerCase() === 'english') return true;
+
+      var shortName = c.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+
+      // Find matching English column
+      var matchingEnCol = enLang.columns.find(function(ec) {
+        var enShortName = ec.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+        return enShortName === shortName;
+      });
+
+      // If no matching English column, show this column
+      if (!matchingEnCol) return true;
+
+      // Check if English column has any values
+      return state.sheetData.rows.some(function(row) {
+        var enCell = row.cells[String(matchingEnCol.colIndex)];
+        return enCell && enCell.value.trim();
+      });
+    });
+
+    state.currentColumns = visibleColumns;
+
+    visibleColumns.forEach(function(c, idx) {
+      var tab = document.createElement('button');
+      tab.className = 'col-tab';
+      tab.dataset.colIndex = c.colIndex;
+      tab.dataset.index = idx;
+
+      var shortName = c.header.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      if (!shortName) shortName = c.header;
+
+      var dot = document.createElement('span');
+      dot.className = 'status-dot empty';
+      dot.dataset.colIndex = c.colIndex;
+
+      tab.appendChild(dot);
+      tab.appendChild(document.createTextNode(shortName));
+
+      tab.addEventListener('click', function() {
+        if (this.classList.contains('disabled') || this.classList.contains('no-entries')) return;
+        selectColumn(parseInt(this.dataset.colIndex), parseInt(this.dataset.index));
+      });
+
+      container.appendChild(tab);
+    });
+
+    row.style.display = visibleColumns.length > 1 ? 'flex' : 'none';
+
+    if (visibleColumns.length > 0) {
+      selectColumn(visibleColumns[0].colIndex, 0);
+    }
+  }
+
+  function selectColumn(colIndex, tabIndex) {
+    state.selectedColIndex = colIndex;
+
+    // Derive tabIndex from colIndex if not supplied
+    if (tabIndex === undefined || tabIndex === null) {
+      tabIndex = state.currentColumns.findIndex(function(c) { return c.colIndex === colIndex; });
+      if (tabIndex === -1) tabIndex = 0;
+    }
+    state.selectedTabIndex = tabIndex;
+
+    document.querySelectorAll('.col-tab').forEach(function(tab, idx) {
+      tab.classList.toggle('active', idx === tabIndex);
+    });
+
+    applyFilterAndRender();
+  }
+
+  function updateTabStatusDots() {
+    if (!state.filteredRows || state.currentIdx >= state.filteredRows.length) return;
+
+    var row = state.filteredRows[state.currentIdx];
+    if (!row) return;
+
+    document.querySelectorAll('.col-tab .status-dot').forEach(function(dot) {
+      var colIdx = dot.dataset.colIndex;
+      var cell = row.cells[colIdx];
+      var status = cell ? (cell.status || 'UNTRANSLATED') : 'UNTRANSLATED';
+      dot.className = 'status-dot ' + (status.toLowerCase() || 'untranslated');
+    });
+  }
+
+  function updateTabDisabledState() {
+    if (!state.filteredRows || state.currentIdx >= state.filteredRows.length) return;
+
+    var row = state.filteredRows[state.currentIdx];
+    if (!row) return;
+
+    document.querySelectorAll('.col-tab').forEach(function(tab) {
+      var colIdx = tab.dataset.colIndex;
+      var cell = row.cells[colIdx];
+      var isNC = cell && (cell.value === '%N/C%' || cell.value === '%C/O%');
+      tab.classList.toggle('disabled', isNC);
+      tab.disabled = isNC;
+    });
+  }
+
+  // ── Status Filter ────────────────────────────────────────────────────────────
+  function setStatusFilter(filterType) {
+    state.statusFilter = filterType;
+    state.filter = filterType;
+    state.currentIdx = 0;
+
+    // Update UI
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.filter === filterType);
+    });
+
+    applyFilterAndRender();
+  }
+
+  function matchesStatusFilter(cellStatus, filterType) {
+    var status = cellStatus || 'UNTRANSLATED';
+
+    switch (filterType) {
+      case 'all':
+        return true;
+      case 'untranslated':
+        return status === 'UNTRANSLATED' || !cellStatus;
+      case 'translated':
+        return status === 'TRANSLATED';
+      case 'reviewed':
+        return status === 'REVIEWED';
+      case 'disputed':
+        return status === 'DISPUTED';
+      default:
+        return true;
+    }
+  }
+
+  // ── Filter & Render ───────────────────────────────────────────────────────────
+  function applyFilterAndRender() {
+    if (!state.sheetData || !state.selectedColIndex) return;
+
+    var colKey = String(state.selectedColIndex);
+    var rows = state.sheetData.rows;
+
+    // Get English column for current tab to filter empty sources
+    var enColIndex = getEnglishColumnForCurrentTab();
+
+    state.filteredRows = rows.filter(function(row) {
+      var cell = row.cells[colKey];
+      if (!cell) return false;
+      if (cell.status === 'STATIC') return false;
+      if (cell.value === '%N/C%' || cell.value === '%C/O%') return false;
+
+      // Filter out rows with empty English source
+      if (enColIndex) {
+        var enCell = row.cells[String(enColIndex)];
+        if (!enCell || !enCell.value.trim()) return false;
+      }
+
+      // Apply status filter
+      if (!matchesStatusFilter(cell.status, state.statusFilter)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (state.currentIdx >= state.filteredRows.length) {
+      state.currentIdx = 0;
+    }
+
+    if (state.filteredRows.length === 0) {
+      showEmptyState(true);
+    } else {
+      showEmptyState(false);
+      renderCurrentEntry();
+    }
+
+    updateEntryCounter();
+    renderSearchResults();
+    updateTabEntryAvailability();
+  }
+
+  function updateTabEntryAvailability() {
+    if (!state.sheetData || !state.currentColumns.length) return;
+
+    var rows = state.sheetData.rows;
+    document.querySelectorAll('.col-tab').forEach(function(tab) {
+      var colIdx = String(tab.dataset.colIndex);
+      var hasEntries = rows.some(function(row) {
+        var cell = row.cells[colIdx];
+        if (!cell || cell.status === 'STATIC') return false;
+        return matchesStatusFilter(cell.status, state.statusFilter);
+      });
+      tab.classList.toggle('no-entries', !hasEntries);
+    });
+  }
+
+  function showEmptyState(show) {
+    document.getElementById('modal').style.display = show ? 'none' : 'flex';
+    document.getElementById('empty-state').classList.toggle('visible', show);
+    if (show) {
+      var f = state.statusFilter;
+      var msgs = {
+        untranslated: { icon: '✅', title: 'All caught up!', msg: 'No untranslated entries for this language.' },
+        translated:   { icon: '🔍', title: 'Nothing here',  msg: 'No translated entries — either all have been reviewed already, or none have been translated yet.' },
+        reviewed:     { icon: '🔍', title: 'Nothing here',  msg: 'No reviewed entries found.' },
+        disputed:     { icon: '💬', title: 'All clear',     msg: 'No disputed entries found.' },
+        all:          { icon: '📭', title: 'Empty sheet',   msg: 'No entries found in this sheet.' },
+      };
+      // Count entries per status for the current column so we can hide useless buttons
+      // and show a precise message
+      var colKey = String(state.selectedColIndex);
+      var counts = { translated: 0, reviewed: 0 };
+      if (state.sheetData && state.sheetData.rows) {
+        state.sheetData.rows.forEach(function(row) {
+          var cell = row.cells[colKey];
+          if (!cell || cell.status === 'STATIC') return;
+          if (cell.status === 'TRANSLATED') counts.translated++;
+          if (cell.status === 'REVIEWED')   counts.reviewed++;
+        });
+      }
+
+      // Refine the translated empty-state message now that we have counts
+      if (f === 'translated') {
+        if (counts.reviewed > 0) {
+          msgs.translated.msg = 'All translated entries have already been reviewed.';
+        } else {
+          msgs.translated.msg = 'No entries have been translated yet.';
+        }
+      }
+
+      var d = msgs[f] || msgs.all;
+      document.getElementById('empty-icon').textContent    = d.icon;
+      document.getElementById('empty-title').textContent   = d.title;
+      document.getElementById('empty-message').textContent = d.msg;
+
+      var btnTranslated = document.querySelector('#empty-state button[onclick*="translated"]');
+      var btnReviewed   = document.querySelector('#empty-state button[onclick*="reviewed"]');
+      if (btnTranslated) btnTranslated.style.display = counts.translated > 0 ? '' : 'none';
+      if (btnReviewed)   btnReviewed.style.display   = counts.reviewed   > 0 ? '' : 'none';
+    }
+  }
+
+  function showAllEntries() {
+    setStatusFilter('all');
+  }
+
+  function renderCurrentEntry() {
+    if (!state.filteredRows.length) return;
+
+    var row = state.filteredRows[state.currentIdx];
+    var colKey = String(state.selectedColIndex);
+    var cell = row.cells[colKey] || { value: '', status: '' };
+
+    // Context panel
+    document.getElementById('panel-key-value').textContent = row.key;
+
+    // English source - use helper to find the corresponding English column
+    var enValue = '';
+    var enColIndex = getEnglishColumnForCurrentTab();
+    if (enColIndex) {
+      var enCell = row.cells[String(enColIndex)];
+      if (enCell) enValue = enCell.value;
+    }
+    document.getElementById('panel-english-value').textContent = enValue || 'No English source';
+
+    // Adjust labels for source language
+    updateTranslationPanelLabels(state.selectedLang);
+
+    // Translation input
+    var input = document.getElementById('translation-input');
+    input.value = cell.value || '';
+    input.disabled = (cell.status === 'STATIC');
+    state.isDirty = false;
+    updateSaveButton();
+
+    // Status
+    var status = cell.status || 'UNTRANSLATED';
+    state.pendingStatus = status;
+    renderStatusBadge(status);
+    renderStatusButtons(status);
+
+    // Update UI elements
+    updateTabStatusDots();
+    updateTabDisabledState();
+
+    // Highlight search term in translation box
+    updateTranslationHighlight();
+
+    // Nav buttons — disabled at absolute start/end across all fields+rows
+    var _tabs = enabledTabsForRow(state.currentIdx);
+    var _atAbsoluteStart = state.currentIdx <= 0 && _tabs.indexOf(state.selectedTabIndex) === 0;
+    var _atAbsoluteEnd   = state.currentIdx >= state.filteredRows.length - 1 && _tabs.indexOf(state.selectedTabIndex) === _tabs.length - 1;
+    document.getElementById('btn-prev').disabled = _atAbsoluteStart;
+    document.getElementById('btn-next').disabled = _atAbsoluteEnd;
+  }
+
+  function renderStatusBadge(status) {
+    var badge = document.getElementById('status-badge');
+    badge.textContent = statusLabel(status);
+    badge.style.background = statusColor(status);
+    badge.style.borderColor = statusColor(status);
+    badge.style.color = (status === 'TRANSLATED' || status === 'REVIEWED') ? '#202124' : '#fff';
+  }
+
+  function renderStatusButtons(status) {
+    document.querySelectorAll('.status-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.status === status);
+    });
+  }
+
+  function updateEntryCounter() {
+    // Count total navigable entries: sum of enabled tabs across all filtered rows
+    var total = 0;
+    var idx = 0;
+    state.filteredRows.forEach(function(row, rowIdx) {
+      var tabs = enabledTabsForRow(rowIdx);
+      if (rowIdx < state.currentIdx) {
+        idx += tabs.length;
+      } else if (rowIdx === state.currentIdx) {
+        var posInTabs = tabs.indexOf(state.selectedTabIndex);
+        idx += (posInTabs >= 0 ? posInTabs : 0) + 1;
+      }
+      total += tabs.length;
+    });
+    if (total === 0) idx = 0;
+
+    // Build info string: "Sheet | Lang | Filter"
+    var parts = [];
+
+    // Sheet name (with cache indicator)
+    if (state.sheetName) {
+      var cacheIndicator = state.sheetCache[state.sheetName] ? ' (cached)' : '';
+      parts.push(state.sheetName + cacheIndicator);
+    }
+
+    // Language
+    if (state.selectedLang) {
+      parts.push(state.selectedLang);
+    }
+
+    // Filter
+    var filterLabel = state.statusFilter.charAt(0).toUpperCase() + state.statusFilter.slice(1);
+    parts.push(filterLabel);
+
+    var infoStr = parts.join(' | ');
+    var text = infoStr + ' — ' + idx + ' of ' + total;
+
+    // Show global search indicator if active
+    if (state.isGlobalSearch && state.globalSearchResults.length > 0) {
+      text += ' (global search: ' + state.globalSearchResults.length + ' matches)';
+    }
+
+    document.getElementById('entry-counter').textContent = text;
+  }
+
+  // ── Search Results ─────────────────────────────────────────────────────────────
+  function renderSearchResults() {
+    // If global search is active, renderGlobalSearchResults handles the panel
+    if (state.isGlobalSearch) {
+      return;
+    }
+
+    var panel = document.getElementById('search-results-panel');
+    var list = document.getElementById('search-results-list');
+    var header = panel.querySelector('.search-results-header');
+
+    // Hide panel if no search query
+    if (!state.searchQuery || !state.filteredRows.length) {
+      panel.classList.remove('visible');
+      return;
+    }
+
+    // Show panel and update header
+    panel.classList.add('visible');
+    header.textContent = 'Search Results (' + state.filteredRows.length + ')';
+
+    // Clear and rebuild list
+    list.innerHTML = '';
+    var searchLower = state.searchQuery.toLowerCase();
+
+    state.filteredRows.forEach(function(row, idx) {
+      var item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.dataset.index = idx;
+      if (idx === state.currentIdx) {
+        item.classList.add('active');
+      }
+
+      // Key
+      var keyDiv = document.createElement('div');
+      keyDiv.className = 'search-result-key';
+      keyDiv.textContent = row.key;
+      item.appendChild(keyDiv);
+
+      // Preview (English or current column value)
+      var previewDiv = document.createElement('div');
+      previewDiv.className = 'search-result-preview';
+
+      // Get English value for preview
+      var previewText = '';
+      var enLang = state.languages.find(function(l) {
+        return l.languageName.toLowerCase() === 'english';
+      });
+      if (enLang && enLang.columns.length > 0) {
+        var enCell = row.cells[String(enLang.columns[0].colIndex)];
+        if (enCell) previewText = enCell.value;
+      }
+
+      // Highlight search term
+      if (previewText) {
+        var matchIdx = previewText.toLowerCase().indexOf(searchLower);
+        if (matchIdx !== -1) {
+          var before = previewText.substring(0, matchIdx);
+          var match = previewText.substring(matchIdx, matchIdx + searchLower.length);
+          var after = previewText.substring(matchIdx + searchLower.length);
+          previewDiv.innerHTML = before + '<mark>' + match + '</mark>' + after;
+        } else {
+          previewDiv.textContent = previewText;
+        }
+      } else {
+        previewDiv.textContent = 'No preview';
+      }
+
+      item.appendChild(previewDiv);
+
+      // Click to navigate
+      item.addEventListener('click', function() {
+        state.currentIdx = parseInt(this.dataset.index);
+        renderCurrentEntry();
+        renderSearchResults(); // Re-render to update active state
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function updateSearchResultsActiveItem() {
+    document.querySelectorAll('.search-result-item').forEach(function(item) {
+      item.classList.toggle('active', parseInt(item.dataset.index) === state.currentIdx);
+    });
+  }
+
+  // ── User interactions ────────────────────────────────────────────────────────
+  function updateTranslationHighlight() {
+    var query = state.searchQuery;
+    var input = document.getElementById('translation-input');
+    var backdrop = document.getElementById('translation-highlight');
+    var text = input.value;
+
+    if (!query || !text) {
+      backdrop.innerHTML = '';
+      return;
+    }
+
+    var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    var queryEsc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var flags = state.caseSensitive ? 'g' : 'gi';
+    var highlighted = escaped.replace(new RegExp(queryEsc, flags), function(m) {
+      return '<mark>' + m + '</mark>';
+    });
+    backdrop.innerHTML = highlighted;
+    backdrop.scrollTop = input.scrollTop;
+  }
+
+  document.getElementById('translation-input').addEventListener('scroll', function() {
+    document.getElementById('translation-highlight').scrollTop = this.scrollTop;
+  });
+
+  document.getElementById('translation-input').addEventListener('input', function() {
+    state.isDirty = true;
+    updateSaveButton();
+    if (state.pendingStatus === 'UNTRANSLATED' || !state.pendingStatus) {
+      selectStatus('TRANSLATED');
+    }
+    updateTranslationHighlight();
+  });
+
+  document.getElementById('translation-input').addEventListener('keydown', function(e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      selectStatus('TRANSLATED');
+      saveEntry();
+    } else if (e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+      selectStatus('REVIEWED');
+      saveEntry();
+    } else if (e.key === 'd' || e.key === 'D') {
+      e.preventDefault();
+      selectStatus('DISPUTED');
+      saveEntry();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      navigate(1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigate(-1);
+    }
+  });
+
+  function selectStatus(status) {
+    state.pendingStatus = status;
+    renderStatusBadge(status);
+    renderStatusButtons(status);
+    var row = state.filteredRows[state.currentIdx];
+    var cell = row && row.cells[String(state.selectedColIndex)];
+    var savedStatus = (cell && cell.status) || 'UNTRANSLATED';
+    var savedValue  = (cell && cell.value)  || '';
+    var currentValue = document.getElementById('translation-input').value;
+    state.isDirty = (status !== savedStatus) || (currentValue !== savedValue);
+    updateSaveButton();
+  }
+
+  function updateSaveButton() {
+    var btn = document.getElementById('btn-save');
+    if (!btn) return;
+    btn.disabled = !state.isDirty;
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────────
+  function enabledTabsForRow(rowIdx) {
+    var row = state.filteredRows[rowIdx];
+    return state.currentColumns.reduce(function(acc, col, idx) {
+      var cell = row && row.cells[String(col.colIndex)];
+      if (!cell) return acc;
+      if (cell.value === '%N/C%' || cell.value === '%C/O%' || cell.status === 'STATIC') return acc;
+      if (!matchesStatusFilter(cell.status, state.statusFilter)) return acc;
+      acc.push(idx);
+      return acc;
+    }, []);
+  }
+
+  function navigateAfterSave() {
+    if (!state.filteredRows.length) return;
+    var tabs = enabledTabsForRow(state.currentIdx);
+    var posInTabs = tabs.indexOf(state.selectedTabIndex);
+    var nextTabPos = posInTabs + 1;
+
+    if (nextTabPos < tabs.length) {
+      var nextTabIdx = tabs[nextTabPos];
+      var nextCol = state.currentColumns[nextTabIdx];
+      selectColumn(nextCol.colIndex, nextTabIdx);
+      return;
+    }
+
+    var newRowIdx = state.currentIdx + 1;
+    if (newRowIdx >= state.filteredRows.length) return;
+
+    state.currentIdx = newRowIdx;
+    var newTabs = enabledTabsForRow(newRowIdx);
+    if (newTabs.length > 0) {
+      var landCol = state.currentColumns[newTabs[0]];
+      state.selectedColIndex = landCol.colIndex;
+      state.selectedTabIndex = newTabs[0];
+    }
+    renderCurrentEntry();
+    if (state.searchQuery) updateSearchResultsActiveItem();
+  }
+
+  function navigate(delta) {
+    if (!state.filteredRows.length) return;
+
+    var tabs = enabledTabsForRow(state.currentIdx);
+    var posInTabs = tabs.indexOf(state.selectedTabIndex);
+
+    // If selectedTabIndex is stale/not found, anchor it to the boundary
+    if (posInTabs === -1) {
+      posInTabs = delta > 0 ? tabs.length - 1 : 0;
+    }
+
+    var nextTabPos = posInTabs + delta;
+
+    if (nextTabPos >= 0 && nextTabPos < tabs.length) {
+      // Stay on same row, just switch field
+      var nextTabIdx = tabs[nextTabPos];
+      var nextCol = state.currentColumns[nextTabIdx];
+      // Update state directly — don't call selectColumn which triggers applyFilterAndRender
+      state.selectedColIndex = nextCol.colIndex;
+      state.selectedTabIndex = nextTabIdx;
+      document.querySelectorAll('.col-tab').forEach(function(tab, idx) {
+        tab.classList.toggle('active', idx === nextTabIdx);
+      });
+      renderCurrentEntry();
+      updateEntryCounter();
+      return;
+    }
+
+    // Tab boundary crossed — move to adjacent row
+    var newRowIdx = state.currentIdx + delta;
+    if (newRowIdx < 0 || newRowIdx >= state.filteredRows.length) return;
+
+    if (state.isDirty) {
+      if (!confirm('You have unsaved changes. Discard and continue?')) return;
+    }
+
+    state.currentIdx = newRowIdx;
+
+    var newTabs = enabledTabsForRow(newRowIdx);
+    if (newTabs.length > 0) {
+      // Forward: land on first tab; backward: land on last tab
+      var landIdx = delta > 0 ? newTabs[0] : newTabs[newTabs.length - 1];
+      var landCol = state.currentColumns[landIdx];
+      state.selectedColIndex = landCol.colIndex;
+      state.selectedTabIndex = landIdx;
+      document.querySelectorAll('.col-tab').forEach(function(tab, idx) {
+        tab.classList.toggle('active', idx === landIdx);
+      });
+    }
+
+    renderCurrentEntry();
+    updateEntryCounter();
+
+    if (state.searchQuery) {
+      updateSearchResultsActiveItem();
+    }
+  }
+
+  function jumpToNextUntranslated() {
+    if (!state.filteredRows.length) return;
+
+    var colKey = String(state.selectedColIndex);
+    var startIdx = state.currentIdx + 1;
+
+    for (var i = startIdx; i < state.filteredRows.length; i++) {
+      var cell = state.filteredRows[i].cells[colKey];
+      if (cell && isUntranslated(cell.status)) {
+        if (state.isDirty) {
+          if (!confirm('You have unsaved changes. Discard and continue?')) return;
+        }
+        state.currentIdx = i;
+        renderCurrentEntry();
+        updateEntryCounter();
+        return;
+      }
+    }
+
+    showToast('No more untranslated entries.');
+  }
+
+  function skipEntry() {
+    navigate(1);
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────────
+  function saveEntry(callback) {
+    if (!state.filteredRows.length) return;
+
+    var row = state.filteredRows[state.currentIdx];
+    var value = document.getElementById('translation-input').value;
+    var status = state.pendingStatus || 'TRANSLATED';
+    var sheetName = state.sheetData.sheetName;
+    var colIndex = state.selectedColIndex;
+
+    // Prevent emptying English entries
+    var isEnglish = state.selectedLang && state.selectedLang.toLowerCase() === 'english';
+    if (isEnglish && !value.trim()) {
+      alert('English source text cannot be emptied. Please enter a value.');
+      return;
+    }
+
+    // If English was marked DISPUTED, compute cascade targets now (client has all data)
+    var cascadeColIndices = [];
+    if (status === 'DISPUTED') {
+      var enLangC = state.languages.find(function(l) { return l.languageName.toLowerCase() === 'english'; });
+      var savedEnColC = enLangC && enLangC.columns.find(function(c) { return c.colIndex === colIndex; });
+      if (savedEnColC) {
+        var savedShortNameC = savedEnColC.header.replace(/\s*\([^)]+\)\s*$/, '').trim() || savedEnColC.header;
+        state.languages.forEach(function(lang) {
+          if (lang.languageName.toLowerCase() === 'english') return;
+          lang.columns.forEach(function(c) {
+            var shortName = c.header.replace(/\s*\([^)]+\)\s*$/, '').trim() || c.header;
+            if (shortName !== savedShortNameC) return;
+            var key = String(c.colIndex);
+            var cell = row.cells[key];
+            if (cell && cell.status !== 'STATIC' && cell.value !== '%N/C%' && cell.value !== '%C/O%') {
+              cascadeColIndices.push(c.colIndex);
+            }
+          });
+        });
+      }
+    }
+
+    var btn = document.getElementById('btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    google.script.run
+      .withSuccessHandler(function() {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+        state.isDirty = false;
+        updateSaveButton();
+
+        var colKey = String(colIndex);
+        if (row.cells[colKey]) {
+          row.cells[colKey].value = value;
+          row.cells[colKey].status = status;
+        }
+
+        // If English was marked DISPUTED, cascade to matching field of other languages in cache
+        if (status === 'DISPUTED') {
+          var enLang = state.languages.find(function(l) { return l.languageName.toLowerCase() === 'english'; });
+          var savedEnCol = enLang && enLang.columns.find(function(c) { return c.colIndex === colIndex; });
+          if (savedEnCol) {
+            var savedShortName = savedEnCol.header.replace(/\s*\([^)]+\)\s*$/, '').trim() || savedEnCol.header;
+            function cascadeDisputed(targetRow) {
+              state.languages.forEach(function(lang) {
+                if (lang.languageName.toLowerCase() === 'english') return;
+                lang.columns.forEach(function(c) {
+                  var shortName = c.header.replace(/\s*\([^)]+\)\s*$/, '').trim() || c.header;
+                  if (shortName !== savedShortName) return;
+                  var key = String(c.colIndex);
+                  if (targetRow.cells[key] && targetRow.cells[key].status !== 'STATIC') {
+                    targetRow.cells[key].status = 'DISPUTED';
+                  }
+                });
+              });
+            }
+            cascadeDisputed(row);
+            if (state.sheetData && state.sheetData.rows) {
+              state.sheetData.rows.forEach(function(r) {
+                if (r.rowIndex === row.rowIndex) cascadeDisputed(r);
+              });
+            }
+          }
+        }
+
+        updateTabStatusDots();
+        renderStatusBadge(status);
+
+        if (state.filter === 'untranslated' && !isUntranslated(status)) {
+          state.filteredRows.splice(state.currentIdx, 1);
+          if (state.filteredRows.length === 0) {
+            showEmptyState(true);
+            showToast('Saved! All done.');
+            if (callback) callback();
+            return;
+          }
+          if (state.currentIdx >= state.filteredRows.length) {
+            state.currentIdx = state.filteredRows.length - 1;
+          }
+          renderCurrentEntry();
+        } else {
+          navigateAfterSave();
+        }
+
+        updateEntryCounter();
+        showToast('Saved!');
+        if (callback) callback();
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+        alert('Error: ' + err.message);
+      })
+      .saveTranslation(sheetName, row.rowIndex, colIndex, 0, value, status, cascadeColIndices);
+  }
+
+  // ── RBAC ─────────────────────────────────────────────────────────────────────
+  function applyRole() {
+    var badge = document.getElementById('role-badge');
+    var adminBtn = document.getElementById('btn-admin');
+    var banner = document.getElementById('readonly-banner');
+    var input = document.getElementById('translation-input');
+    var saveBtn = document.getElementById('btn-save');
+    var reviewedBtn = document.querySelector('.status-btn[data-status="REVIEWED"]');
+
+    // Set role badge
+    var roleLabel = { ADMIN: 'Admin', REVIEWER: 'Reviewer', TRANSLATOR: 'Translator', NONE: 'Read-only' };
+    badge.textContent = roleLabel[USER_ROLE] || 'Read-only';
+    badge.className = 'role-' + (USER_ROLE || 'NONE').toLowerCase();
+
+    if (USER_ROLE === 'NONE') {
+      banner.classList.add('visible');
+      input.disabled = true;
+      saveBtn.disabled = true;
+    }
+
+    if (USER_ROLE === 'TRANSLATOR') {
+      if (reviewedBtn) reviewedBtn.style.display = 'none';
+    }
+
+    if (USER_ROLE === 'ADMIN') {
+      adminBtn.classList.add('visible');
+    }
+  }
+
+  // ── Admin panel ───────────────────────────────────────────────────────────────
+  function toggleAdminPanel() {
+    var panel = document.getElementById('admin-panel');
+    var btn = document.getElementById('btn-admin');
+    var isOpen = panel.classList.contains('visible');
+
+    if (isOpen) {
+      panel.classList.remove('visible');
+      btn.classList.remove('active');
+    } else {
+      panel.classList.add('visible');
+      btn.classList.add('active');
+      adminLoadUsers();
+    }
+  }
+
+  function adminLoadUsers() {
+    var list = document.getElementById('admin-users-list');
+    list.innerHTML = '<div style="color:#5f6368;font-size:13px;">Loading…</div>';
+
+    google.script.run
+      .withSuccessHandler(function(users) {
+        adminRenderUsers(users);
+      })
+      .withFailureHandler(function(err) {
+        list.innerHTML = '<div style="color:#c5221f;font-size:13px;">Error: ' + err.message + '</div>';
+      })
+      .getUserRoles();
+  }
+
+  function adminRenderUsers(users) {
+    var list = document.getElementById('admin-users-list');
+    list.innerHTML = '';
+
+    if (!users || users.length === 0) {
+      list.innerHTML = '<div style="color:#5f6368;font-size:13px;">No users assigned yet.</div>';
+      return;
+    }
+
+    users.forEach(function(u) {
+      var row = document.createElement('div');
+      row.className = 'admin-user-row';
+
+      var info = document.createElement('div');
+      info.className = 'admin-user-info';
+      info.innerHTML =
+        '<div class="admin-user-email" title="' + u.email + '">' + u.email + '</div>' +
+        '<div class="admin-user-role">' + u.role + '</div>';
+
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'admin-user-remove';
+      removeBtn.textContent = 'Remove';
+      removeBtn.onclick = (function(email) {
+        return function() { adminRemoveUser(email); };
+      })(u.email);
+
+      row.appendChild(info);
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+    });
+  }
+
+  function adminAddUser() {
+    var email = document.getElementById('admin-email-input').value.trim();
+    var role  = document.getElementById('admin-role-select').value;
+
+    if (!email) {
+      alert('Please enter an email address.');
+      return;
+    }
+
+    var btn = document.querySelector('#admin-panel .admin-add-row button');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    google.script.run
+      .withSuccessHandler(function() {
+        btn.disabled = false;
+        btn.textContent = 'Add / Update';
+        document.getElementById('admin-email-input').value = '';
+        adminLoadUsers();
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Add / Update';
+        alert('Error: ' + err.message);
+      })
+      .setUserRole(email, role);
+  }
+
+  function adminRemoveUser(email) {
+    if (!confirm('Remove ' + email + ' from the roles list?')) return;
+
+    google.script.run
+      .withSuccessHandler(function() {
+        adminLoadUsers();
+      })
+      .withFailureHandler(function(err) {
+        alert('Error: ' + err.message);
+      })
+      .removeUserRole(email);
+  }
+
+  // ── Help Tour ─────────────────────────────────────────────────────────────────
+  var tourSteps = [
+    {
+      targetId: 'modal-header',
+      title: 'Welcome to PDG Localisation',
+      text: 'This tool lets you translate game text directly from Google Sheets. This quick tour will walk you through the key parts of the interface.',
+      position: 'bottom'
+    },
+    {
+      targetId: 'sheet-lang-row',
+      title: 'Pick your Sheet & Language',
+      text: 'Use these dropdowns to choose which sheet you\'re working on and which language you\'re translating into.',
+      position: 'bottom'
+    },
+    {
+      targetId: 'search-row',
+      title: 'Search',
+      text: 'Search for any key or translation text across all sheets at once. Results appear in a panel on the right — click any result to jump straight to that entry.',
+      position: 'bottom'
+    },
+    {
+      targetId: 'status-filter',
+      title: 'Filter Entries',
+      text: 'Switch between Untranslated, Translated, Reviewed, and Disputed to focus on what needs attention. Start with Untranslated to jump straight to work.',
+      position: 'bottom'
+    },
+    {
+      targetId: 'col-tabs',
+      title: 'Fields',
+      text: 'Some sheets have multiple text fields per entry (e.g. Name and Description). Use these tabs to switch between them.',
+      position: 'bottom'
+    },
+    {
+      targetId: 'english-source-section',
+      targetId2: 'translation-input',
+      title: 'English Source & Translation',
+      text: 'The English source text and its key are shown here for reference. Type your translation in the text area below it.',
+      position: 'top'
+    },
+    {
+      targetId: 'status-section',
+      title: 'Mark the Status',
+      text: 'After translating, mark the entry as Translated. Use Reviewed once a second pair of eyes has checked it, or Disputed if something needs discussion.',
+      position: 'top'
+    },
+    {
+      targetId: 'footer',
+      title: 'Navigate & Save',
+      text: 'Save the current entry, jump to the Next Untranslated, or skip an entry. The counter in the middle shows your progress.',
+      position: 'top'
+    }
+  ];
+
+  var tourCurrentStep = 0;
+
+  function startTour() {
+    tourCurrentStep = 0;
+    document.getElementById('tour-overlay').classList.add('active');
+    renderTourStep();
+  }
+
+  function endTour() {
+    document.getElementById('tour-overlay').classList.remove('active');
+  }
+
+  function tourNext() {
+    if (tourCurrentStep < tourSteps.length - 1) {
+      tourCurrentStep++;
+      renderTourStep();
+    } else {
+      endTour();
+    }
+  }
+
+  function tourPrev() {
+    if (tourCurrentStep > 0) {
+      tourCurrentStep--;
+      renderTourStep();
+    }
+  }
+
+  function renderTourStep() {
+    var step = tourSteps[tourCurrentStep];
+    var total = tourSteps.length;
+    var idx = tourCurrentStep;
+
+    document.getElementById('tour-step-counter').textContent = 'Step ' + (idx + 1) + ' / ' + total;
+    document.getElementById('tour-title').textContent = step.title;
+    document.getElementById('tour-text').textContent = step.text;
+
+    var prevBtn = document.getElementById('tour-prev');
+    var nextBtn = document.getElementById('tour-next');
+    prevBtn.disabled = (idx === 0);
+    nextBtn.textContent = (idx === total - 1) ? 'Done' : 'Next';
+
+    var target = document.getElementById(step.targetId);
+    var target2 = step.targetId2 ? document.getElementById(step.targetId2) : null;
+
+    // If primary target is hidden, promote target2 to primary before falling back
+    if (!target || target.offsetParent === null) {
+      if (target2 && target2.offsetParent !== null) {
+        target = target2;
+        target2 = null;
+      } else {
+        positionTourTooltipCenter();
+        return;
+      }
+    }
+
+    positionTourTooltip(target, step.position, target2);
+  }
+
+  function positionTourTooltip(target, preferredPos, target2) {
+    var PAD = 8;
+    var rect = target.getBoundingClientRect();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    // If a second target is provided, expand the cutout to cover both
+    if (target2 && target2.offsetParent !== null) {
+      var rect2 = target2.getBoundingClientRect();
+      rect = {
+        left:   Math.min(rect.left,   rect2.left),
+        top:    Math.min(rect.top,    rect2.top),
+        right:  Math.max(rect.right,  rect2.right),
+        bottom: Math.max(rect.bottom, rect2.bottom),
+        width:  Math.max(rect.right,  rect2.right)  - Math.min(rect.left, rect2.left),
+        height: Math.max(rect.bottom, rect2.bottom) - Math.min(rect.top,  rect2.top),
+      };
+    }
+
+    var cutout = document.getElementById('tour-cutout');
+    cutout.style.left   = (rect.left   - PAD) + 'px';
+    cutout.style.top    = (rect.top    - PAD) + 'px';
+    cutout.style.width  = (rect.width  + PAD * 2) + 'px';
+    cutout.style.height = (rect.height + PAD * 2) + 'px';
+
+    var tooltip = document.getElementById('tour-tooltip');
+    var TW = 300;
+    var GAP = 16;
+    var left, top, arrowClass;
+
+    // Use real rendered height so top-placement never undershoots
+    var TH = tooltip.offsetHeight || 180;
+
+    // Determine best placement
+    var pos = preferredPos;
+    if (pos === 'bottom' && (rect.bottom + GAP + TH) > vh) pos = 'top';
+    if (pos === 'top'    && (rect.top    - GAP - TH) < 0)  pos = 'bottom';
+    if (pos === 'right'  && (rect.right  + GAP + TW) > vw) pos = 'left';
+    if (pos === 'left'   && (rect.left   - GAP - TW) < 0)  pos = 'right';
+
+    if (pos === 'bottom') {
+      top = rect.bottom + PAD + GAP;
+      left = Math.min(Math.max(rect.left, PAD), vw - TW - PAD);
+      arrowClass = 'arrow-top';
+    } else if (pos === 'top') {
+      top = rect.top - PAD - GAP - TH;
+      left = Math.min(Math.max(rect.left, PAD), vw - TW - PAD);
+      arrowClass = 'arrow-bottom';
+    } else if (pos === 'right') {
+      left = rect.right + PAD + GAP;
+      top = Math.min(Math.max(rect.top, PAD), vh - TH - PAD);
+      arrowClass = 'arrow-left';
+    } else {
+      left = rect.left - PAD - GAP - TW;
+      top = Math.min(Math.max(rect.top, PAD), vh - TH - PAD);
+      arrowClass = 'arrow-right';
+    }
+
+    tooltip.className = arrowClass;
+    // Re-measure after class change (arrow adds height) and correct top if needed
+    TH = tooltip.offsetHeight || TH;
+    if (pos === 'top') top = rect.top - PAD - GAP - TH;
+
+    tooltip.style.left = Math.max(PAD, left) + 'px';
+    tooltip.style.top  = Math.max(PAD, top)  + 'px';
+  }
+
+  function positionTourTooltipCenter() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var TW = 300;
+    var TH = 160;
+
+    var cutout = document.getElementById('tour-cutout');
+    cutout.style.left = '0'; cutout.style.top = '0';
+    cutout.style.width = '0'; cutout.style.height = '0';
+
+    var tooltip = document.getElementById('tour-tooltip');
+    tooltip.style.left = ((vw - TW) / 2) + 'px';
+    tooltip.style.top  = ((vh - TH) / 2) + 'px';
+    tooltip.className = '';
+  }
+
+  // ── Modal actions ──────────────────────────────────────────────────────────────
+  function closeModal() {
+    if (state.isDirty) {
+      if (!confirm('You have unsaved changes. Discard and close?')) return;
+    }
+    google.script.host.close();
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    // Simple alert for now - could be enhanced
+    console.log(msg);
+  }
+  </script>
+
+  </body>
+  </html>

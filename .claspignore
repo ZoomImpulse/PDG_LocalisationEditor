@@ -1,0 +1,2 @@
+# rootDir is src/ — clasp only sees files inside src/ by default.
+# Nothing extra needs excluding.

@@ -1,0 +1,4 @@
+{
+  "scriptId": "YOUR_LIBRARY_SCRIPT_ID_HERE",
+  "rootDir": "./src"
+}
