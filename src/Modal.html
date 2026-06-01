@@ -597,6 +597,29 @@
         color: #c5221f;
       }
 
+      /* ── Back button ────────────────────────────────────────────────────────── */
+      #btn-back {
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 4px;
+        border: 1px solid #dadce0;
+        background: #fff;
+        color: #5f6368;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s;
+        line-height: 1;
+      }
+
+      #btn-back:hover {
+        background: #f8f9fa;
+        border-color: #1a73e8;
+        color: #1a73e8;
+      }
+
       /* ── Header bar ────────────────────────────────────────────────────────── */
       #modal-header {
         display: flex;
@@ -938,6 +961,7 @@
     <!-- Header -->
     <div id="modal-header">
       <div style="display:flex;align-items:center;gap:10px;">
+        <button id="btn-back" onclick="goBackToSheetPicker()" title="Back to sheet selection">← Sheets</button>
         <span id="modal-header-title">PDG Localisation</span>
         <span id="role-badge" class="role-none">—</span>
       </div>
@@ -1172,6 +1196,7 @@
           showLoading(false);
           showToast('No localisation sheets found.');
         } else {
+          pickerSheetNames = names;
           // Show picker immediately without progress data
           showSheetPicker(names, null);
           // Then load cached progress in background and update
@@ -1184,6 +1209,7 @@
 
   // Store progress data globally for sheet picker
   var sheetProgressData = null;
+  var pickerSheetNames = [];
   var availableLanguages = [];
   var currentLangFilter = '';
 
@@ -1510,6 +1536,12 @@
 
   function showLoading(on) {
     document.getElementById('loading').style.display = on ? 'flex' : 'none';
+  }
+
+  function goBackToSheetPicker() {
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    showSheetPicker(pickerSheetNames, sheetProgressData);
   }
 
   function handleError(err) {

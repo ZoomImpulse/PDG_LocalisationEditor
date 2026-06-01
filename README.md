@@ -127,7 +127,7 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  PDG Localisation  [Translator ▾]                     [👤 Admin]  [? Help] │  ← Header
+│  [← Sheets]  PDG Localisation  [Translator ▾]         [👤 Admin]  [? Help] │  ← Header
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  👁 Read-only banner (hidden unless role = NONE)                            │  ← Banner
 ├──────────────────────────────────────────────────────┬──────────────────────┤
@@ -156,7 +156,7 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Header**: Title, role badge, admin panel toggle, help tour button
+- **Header**: Back-to-sheet-picker button, title, role badge, admin panel toggle, help tour button
 - **Read-only banner**: Shown when the user has no translator role
 - **Controls**: Sheet selector, language selector, cross-sheet search, status filter buttons, column field tabs
 - **Translation panel**: Current key, English source, large translation textarea, status buttons with keyboard shortcuts
