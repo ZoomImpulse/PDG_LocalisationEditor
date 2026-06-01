@@ -127,9 +127,9 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  PDG Localisation  [Translator ▾]                        [👤 Admin]  [? Help] │  ← Header
+│  PDG Localisation  [Translator ▾]                     [👤 Admin]  [? Help] │  ← Header
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  👁 Read-only banner (hidden unless role = NONE)                             │  ← Banner
+│  👁 Read-only banner (hidden unless role = NONE)                            │  ← Banner
 ├──────────────────────────────────────────────────────┬──────────────────────┤
 │  Sheet: [Sheet1 ▼]   Language: [German ▼]            │                      │
 │  Search: [__________________] [Search] [Aa] [Clear]  │   Search Results     │
@@ -143,11 +143,11 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 │  Army Headquarters                                   │    right panel)      │
 │                                                      │                      │
 │  TRANSLATION                                         │                      │
-│  ┌──────────────────────────────────────────────┐   │                      │
-│  │                                              │   │                      │
-│  │   Large translation textarea                 │   │                      │
-│  │                                              │   │                      │
-│  └──────────────────────────────────────────────┘   │                      │
+│  ┌──────────────────────────────────────────────┐    │                      │
+│  │                                              │    │                      │
+│  │   Large translation textarea                 │    │                      │
+│  │                                              │    │                      │
+│  └──────────────────────────────────────────────┘    │                      │
 │                                                      │                      │
 │  STATUS: [TRANSLATED ▾]                              │                      │
 │  [Untranslated] [Translated Ctrl+S] [Reviewed Ctrl+E] [Disputed Ctrl+D]     │
