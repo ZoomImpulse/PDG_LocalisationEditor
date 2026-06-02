@@ -128,6 +128,13 @@ function refreshProgressCache() {
 
   var duration = (new Date() - startTime) / 1000;
   Logger.log('Progress cache refreshed: ' + cacheRows.length + ' entries in ' + duration + 's');
+
+  // Rebuild the overview sheet from the freshly written cache
+  try {
+    refreshOverviewSheet();
+  } catch (e) {
+    Logger.log('Overview sheet refresh failed: ' + e);
+  }
 }
 
 /**

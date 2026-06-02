@@ -31,6 +31,8 @@ function onOpen() {
     .createMenu('PDG Localisation')
     .addItem('Open Editor', 'openTranslatorModal')
     .addSeparator()
+    .addItem('Refresh Overview', 'refreshOverviewSheet')
+    .addSeparator()
     .addItem('Setup: Seed Statuses', 'insertStatusColumns')
     .addItem('Setup: Initialise Roles', 'initialiseRoles')
     .addToUi();
@@ -43,6 +45,7 @@ function openTranslatorModal()  {
   PDGLib.ensureProgressCacheTrigger();
   PDGLib.openTranslatorModal();
 }
+function refreshOverviewSheet() { PDGLib.refreshOverviewSheet(); }
 function insertStatusColumns()  { PDGLib.insertStatusColumns(); }
 function initialiseRoles()      { PDGLib.initialiseRoles(); }
 

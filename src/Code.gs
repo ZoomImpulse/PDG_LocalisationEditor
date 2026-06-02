@@ -9,6 +9,8 @@ function onOpen() {
     .createMenu('PDG Localisation')
     .addItem('Open Editor', 'openTranslatorModal')
     .addSeparator()
+    .addItem('Refresh Overview', 'refreshOverviewSheet')
+    .addSeparator()
     .addItem('Setup: Seed Statuses', 'insertStatusColumns')
     .addItem('Setup: Initialise Roles', 'initialiseRoles')
     .addToUi();

@@ -2,6 +2,22 @@
 // Config.gs — Constants and shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Spreadsheet ID of the main spreadsheet that should show the Global Overview.
+// Only this spreadsheet will render the cross-spreadsheet summary section.
+// Copy from the URL: /spreadsheets/d/<ID>/edit
+var MAIN_SPREADSHEET_ID = '1jQOrWJpAF_9TQVyrrOfxinyTTxvoDJg_E7BHUNEkoio';
+
+// Linked spreadsheets shown in the Global Overview section of 📊 Overview.
+// Add one entry per spreadsheet. The 'id' is the Google Sheets spreadsheet ID
+// (from the URL: /spreadsheets/d/<ID>/edit). Leave the array empty to disable.
+var LINKED_SPREADSHEETS = [
+   { name: 'Events',      id: '1YNdrUt0Ro1w6aiVZR0uSJnnulpzhh4thvy3K1-fJ_qA' },
+   { name: 'Tech',      id: '15QcA1M4dX455UYD2GEv3tDJ3P4z3jhK7p5qPMTDFS60' },
+   { name: 'Ships', id: '19z068O5ARdrXLyswqTeDqcQdhAwA39kI8Gx_nhZPL3I' },
+   { name: 'Modifiers',    id: '1TZylnt8An15CLYlQmy1tjUYvHgMQoosh_x1jC35HOck' },
+   { name: 'Synced',   id: '1MgcmiOr8OMqD6qo5EMwk3ymVenSqAS8MWdo33hKjIPk' },
+];
+
 // ID of the single spreadsheet that hosts the shared 🔐 Roles sheet.
 // Set this to the spreadsheet ID of your designated roles spreadsheet.
 // Leave as '' to fall back to the active spreadsheet (per-spreadsheet roles).
@@ -59,6 +75,7 @@ var UNTRANSLATED_FILTER_STATUSES = [STATUS.UNTRANSLATED, ''];
 function isIgnoredSheet(name) {
   if (!name) return true;
   // System sheets - never show in picker
+  if (name === '📊 Overview') return true;
   if (name === '📊 Progress') return true;
   if (name === '📊 ProgressCache') return true;
   if (name === '📋 Status') return true;

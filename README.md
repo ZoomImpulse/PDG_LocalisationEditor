@@ -33,9 +33,11 @@ A translation tool for the PDG localisation spreadsheets. Zero hosting required 
 
 | File | Purpose |
 |------|---------|
-| `Config.gs` | Constants (status values, colors, helpers) |
+| `Config.gs` | Constants (status values, colors, helpers, linked spreadsheet IDs) |
 | `Code.gs` | Core logic: column detection, data read/write, modal dialog |
 | `StatusStorage.gs` | Status tracking in a separate hidden sheet |
+| `ProgressCache.gs` | Cached progress data, refreshed every 10 minutes |
+| `Overview.gs` | Auto-generated `📊 Overview` sheet with heat-map and global summary |
 | `Roles.gs` | Role-based access control |
 | `Modal.html` | **Main translator UI** — large modal dialog (1200×800px) |
 | `Stub.gs` | **Thin wrapper** — only file needed in each spreadsheet's bound script |
@@ -164,6 +166,34 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 - **Admin panel**: Slides in from the right (admins only) — manage user roles
 - **Footer**: Prev/Next navigation, entry counter, Save button
 
+## 📊 Overview Sheet
+
+The main spreadsheet automatically generates a `📊 Overview` tab showing translation progress across all spreadsheets.
+
+### Sections
+
+- **Global Overview** — one row per linked spreadsheet, reviewed % per language (main spreadsheet only)
+- **Status Legend** — colour key with descriptions
+- **Overall Progress per Language** — aggregated counts + sparkline progress bars
+- **Progress by Sheet** — heat-map grid of reviewed % per sheet × language
+
+### Configuration (`Config.gs`)
+
+| Variable | Purpose |
+|----------|---------|
+| `MAIN_SPREADSHEET_ID` | ID of the main spreadsheet — only this one renders the Global Overview section |
+| `LINKED_SPREADSHEETS` | Array of `{ name, id }` entries for all linked spreadsheets |
+
+The overview refreshes automatically every 10 minutes (tied to the progress cache trigger) and can be manually triggered via **PDG Localisation → Refresh Overview**.
+
+The sheet is **read-only** — it is hard-locked and cannot be edited manually.
+
+### Stub update required
+
+The `Stub.gs` in each linked spreadsheet must include the `refreshOverviewSheet` delegate for the menu item to appear. Re-paste the latest `Stub.gs` if updating from an older version.
+
+---
+
 ## Status Colors
 
 | Color | Status | Meaning |
@@ -172,7 +202,8 @@ This pushes the library and auto-updates all stub spreadsheets to use the new ve
 | `#e06666` light red | UNTRANSLATED | Needs translation |
 | `#ffff00` yellow | TRANSLATED | Done, awaiting review |
 | `#00ff00` green | REVIEWED | Approved |
-| `#ff0000` red | DISPUTED | Disputed, needs attention |
+| `#ff0000` red | DISPUTED | Disputed — needs rewrite/correction |
+| `#b4a7d6` purple | `%C/O%` | Empty cell — content is optional (empire-specific) |
 
 ## Sheet Rules
 
