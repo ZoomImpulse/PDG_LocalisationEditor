@@ -2380,12 +2380,6 @@
       e.preventDefault();
       selectStatus('DISPUTED');
       saveEntry();
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      navigate(1);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      navigate(-1);
     }
   });
 
@@ -2423,6 +2417,7 @@
 
   function navigateAfterSave() {
     if (!state.filteredRows.length) return;
+    if (state.isGlobalSearch) return;
     var tabs = enabledTabsForRow(state.currentIdx);
     var posInTabs = tabs.indexOf(state.selectedTabIndex);
     var nextTabPos = posInTabs + 1;
